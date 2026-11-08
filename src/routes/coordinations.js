@@ -57,7 +57,7 @@ async function evaluateWithNVIDIA(image, outfit) {
         Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`,
         "Content-Type": "application/json",
       },
-      timeout: 60000,
+      timeout: 300000,
     },
   );
 
