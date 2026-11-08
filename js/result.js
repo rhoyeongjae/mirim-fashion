@@ -15,6 +15,7 @@ const getUserId = () => {
 
 let photo = null;
 let score = null;
+let aiFeedback = null;
 let photoReady = true;
 
 const drawResult = () => {

@@ -2,6 +2,86 @@ const express = require("express");
 const crypto = require("crypto");
 const router = express.Router();
 const db = require("../db");
+const axios = require("axios");
+
+// NVIDIA AI로 코디 평가
+async function evaluateWithNVIDIA(image, outfit) {
+  if (!process.env.NVIDIA_API_KEY) {
+    throw new Error("NVIDIA_API_KEY가 설정되지 않았습니다.");
+  }
+
+  if (
+    typeof image !== "string" ||
+    !/^data:image\/(png|jpeg|webp);base64,/.test(image)
+  ) {
+    throw new Error("올바른 코디 이미지가 전달되지 않았습니다.");
+  }
+
+  const response = await axios.post(
+    "https://integrate.api.nvidia.com/v1/chat/completions",
+    {
+      model: "mistralai/mistral-large-4-1t-a52b",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `다음 코디를 패션 전문가 관점에서 평가해 주세요.
+상의: ${outfit.top}
+하의: ${outfit.bottom}
+신발: ${outfit.shoes || "운동화"}
+머리: ${outfit.hair}
+상의 색상: ${outfit.topColor}
+하의 색상: ${outfit.bottomColor}
+
+이미지를 보고 전체적인 조화, 색상, 스타일을 평가하세요.
+점수는 0~100 사이의 정수로 주세요.
+한국어로 구체적인 피드백을 작성하세요.
+반드시 다음 JSON 형식만 출력하세요.
+{"score":85,"feedback":"코디에 대한 평가"}`,
+            },
+            {
+              type: "image_url",
+              image_url: { url: image },
+            },
+          ],
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 500,
+      stream: false,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      timeout: 60000,
+    },
+  );
+
+  const content = response.data.choices[0].message.content;
+  const jsonText = content.match(/\{[\s\S]*\}/)?.[0];
+
+  if (!jsonText) {
+    throw new Error("AI 평가 결과를 읽을 수 없습니다.");
+  }
+
+  const result = JSON.parse(jsonText);
+  const score = Number(result.score);
+
+  if (
+    !Number.isInteger(score) ||
+    score < 0 ||
+    score > 100 ||
+    typeof result.feedback !== "string"
+  ) {
+    throw new Error("AI 평가 결과 형식이 올바르지 않습니다.");
+  }
+
+  return { score, feedback: result.feedback };
+}
 
 // 임시 코디 평가 함수
 // 실제 AI 평가 기능은 나중에 연결할 예정
@@ -24,16 +104,54 @@ function generateAIFeedback() {
   };
 }
 
+// AI 코디 평가 전용 API
+router.post("/evaluate", async (req, res) => {
+  const { outfit, image } = req.body;
+
+  if (
+    !outfit ||
+    typeof outfit !== "object" ||
+    Array.isArray(outfit) ||
+    typeof image !== "string"
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "코디 정보와 이미지가 필요합니다.",
+    });
+  }
+
+  try {
+    const safeOutfit = { ...outfit };
+    delete safeOutfit.face;
+
+    const result = await evaluateWithNVIDIA(image, safeOutfit);
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("AI 평가 오류:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "AI 코디 평가에 실패했습니다.",
+    });
+  }
+});
+
 // 코디 전체 정보 저장
 router.post("/", async (req, res) => {
-  const { user_id, nickname, outfit, score } = req.body;
+  const { user_id, nickname, outfit, image } = req.body;
 
   if (
     !user_id ||
     typeof user_id !== "string" ||
     !outfit ||
     typeof outfit !== "object" ||
-    Array.isArray(outfit)
+    Array.isArray(outfit) ||
+    typeof image !== "string" ||
+    !image.startsWith("data:image/")
   ) {
     return res.status(400).json({
       success: false,
@@ -44,8 +162,13 @@ router.post("/", async (req, res) => {
   let connection;
 
   try {
+    // 얼굴 사진을 제외한 코디 이미지와 정보를 AI에 전달
+    const safeOutfit = { ...outfit };
+    delete safeOutfit.face;
+
+    const aiResult = await evaluateWithNVIDIA(image, safeOutfit);
+
     connection = await db.getConnection();
-    await connection.beginTransaction();
 
     // 사용자가 DB에 없으면 생성
     await connection.query(
@@ -54,19 +177,6 @@ router.post("/", async (req, res) => {
    ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)`,
       [user_id, nickname || "패션피플"],
     );
-
-    // 얼굴 이미지 데이터는 서버에 저장하지 않음
-    const safeOutfit = { ...outfit };
-    delete safeOutfit.face;
-
-    // 점수가 전달되지 않으면 임시 점수 생성
-    const aiResult =
-      Number.isFinite(Number(score)) && score !== undefined
-        ? {
-            score: Number(score),
-            feedback: "코디 점수가 저장되었습니다.",
-          }
-        : generateAIFeedback();
 
     if (aiResult.score < 0 || aiResult.score > 100) {
       await connection.rollback();
