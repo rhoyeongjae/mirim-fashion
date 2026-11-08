@@ -29,15 +29,15 @@
       <section class="details">
         <div class="score-box">
           <h2>내 코디 평가</h2>
-          <p class="practice-label">연습 모드 · AI 연결 전</p>
+          <p class="practice-label">AI 코디 평가</p>
           <p class="score"><span id="score">—</span> <small>/ 100점</small></p>
           <div class="evaluation">
             <h3>코디 한마디</h3>
-            <p id="evaluation">
-              연습 평가를 눌러 내 코디의 점수를 확인해보세요.
+            <p id="evaluation" aria-live="polite">
+              AI 평가를 눌러 내 코디의 점수를 확인해보세요.
             </p>
           </div>
-          <button id="practice-evaluate" type="button" onclick="evaluateOutfit()">연습 평가하기</button>
+          <button id="evaluate-outfit" type="button" onclick="evaluateOutfit()">AI 평가하기</button>
         </div>
         <div class="record-form">
           <label for="record-name">기록할 이름</label

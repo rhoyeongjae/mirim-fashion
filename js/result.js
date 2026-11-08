@@ -15,7 +15,6 @@ const getUserId = () => {
 
 let photo = null;
 let score = null;
-let aiFeedback = null;
 let photoReady = true;
 
 const drawResult = () => {
@@ -28,35 +27,52 @@ const displayEvaluation = (point, comment) => {
   document.getElementById("evaluation").textContent = comment;
 };
 
-// 서버 연결 전이라 선택한 항목으로 연습 점수 계산함
-const evaluateOutfit = () => {
-  score = 60;
-  if (outfit.hair !== "기본") {
-    score += 7;
+// 예전 코디에 저장된 얼굴 사진을 빼고 서버에 보낼 코디를 만듦
+const getEvaluationInput = () => {
+  const safeOutfit = { ...outfit };
+  delete safeOutfit.face;
+  let imageCanvas = canvas;
+  if (outfit.face !== "") {
+    imageCanvas = document.createElement("canvas");
+    imageCanvas.width = canvas.width;
+    imageCanvas.height = canvas.height;
+    renderOutfit(imageCanvas, safeOutfit);
   }
-  if (accessories.length > 0) {
-    score += 8;
-  }
-  if (outfit.top !== "티셔츠") {
-    score += 7;
-  }
-  if (outfit.bottom !== "청바지") {
-    score += 6;
-  }
-  if (outfit.topColor !== outfit.bottomColor) {
-    score += 7;
-  }
-  for (let stroke of outfit.strokes) {
-    if (stroke.tool !== "eraser") {
-      score += 5;
-      break;
+  return { outfit: safeOutfit, image: imageCanvas.toDataURL("image/png") };
+};
+
+// 완성된 코디 이미지를 서버에 보내고 AI 점수와 평가문을 표시함
+const evaluateOutfit = async () => {
+  const button = document.getElementById("evaluate-outfit");
+  const recordButton = document.getElementById("save-record");
+  if (button.disabled) return;
+
+  button.disabled = true;
+  recordButton.disabled = true;
+  score = null;
+  displayEvaluation("—", "AI가 코디를 평가하는 중이에요.");
+  showMessage("");
+
+  try {
+    const response = await fetch("http://localhost:5001/api/coordinations/evaluate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(getEvaluationInput()),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      displayEvaluation("—", data.message || "AI 평가를 받지 못했어요.");
+      return;
     }
+
+    score = data.data.score;
+    displayEvaluation(score, data.data.feedback);
+    recordButton.disabled = false;
+  } catch (error) {
+    displayEvaluation("—", "AI 평가 서버에 연결하지 못했어요.");
+  } finally {
+    button.disabled = false;
   }
-  displayEvaluation(
-    score,
-    "의상과 색, 그림 여부로 계산한 연습 점수예요. 실제 AI 평가는 서버 연결 후 사용할 수 있어요.",
-  );
-  document.getElementById("save-record").disabled = false;
 };
 
 // 점수 목록에 기록을 추가하고 높은 점수 5개만 저장함
@@ -92,8 +108,7 @@ const saveRecord = async () => {
       body: JSON.stringify({
         user_id: getUserId(),
         nickname: name,
-        outfit: outfit,
-        score: score,
+        ...getEvaluationInput(),
       }),
     });
 
