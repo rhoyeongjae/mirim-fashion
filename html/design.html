@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>미림패션쇼 - 꾸미기</title>
+    <link rel="stylesheet" href="../css/design.css" />
+    <link rel="stylesheet" href="../css/common.css" />
+    <script src="../js/common.js" defer></script>
+    <script src="../js/character.js" defer></script>
+    <script src="../js/design.js" defer></script>
+  </head>
+  <body>
+    <header class="top">
+      <a href="select.html">← 인물 선택</a><b>미림패션쇼</b
+      ><button id="finish" class="finish" type="button" onclick="finishOutfit()">꾸미기 완료 →</button>
+    </header>
+    <main class="designer">
+      <section class="left studio" aria-label="인물 미리보기">
+        <h1 id="model-name"></h1>
+        <p class="hint">인물 위를 마우스나 손가락으로 그려보세요.</p>
+        <canvas
+          id="model"
+          onpointerdown="startDrawing(event)"
+          onpointermove="moveDrawing(event)"
+          onpointerup="endDrawing(event)"
+          onpointercancel="endDrawing(event)"
+          onlostpointercapture="endDrawing(event)"
+          width="420"
+          height="560"
+          aria-label="꾸미는 인물과 그림"
+        ></canvas>
+        <div class="drawing-tools" aria-label="그리기 도구">
+          <div class="button-row">
+            <button type="button" id="pen" onclick="selectTool('pen')" aria-pressed="true">
+              연필</button
+            ><button type="button" id="brush" onclick="selectTool('brush')" aria-pressed="false">
+              붓</button
+            ><button type="button" id="eraser" onclick="selectTool('eraser')" aria-pressed="false">
+              지우개
+            </button>
+          </div>
+          <div class="button-row">
+            <label
+              >펜 색
+              <input id="pen-color" type="color" value="#da6551" /></label
+            ><label
+              >굵기
+              <input id="pen-size" type="range" min="1" max="15" value="4"
+            /></label>
+          </div>
+          <div class="button-row">
+            <button id="undo" type="button" onclick="undoDrawing()">한 획 취소</button
+            ><button id="clear-drawing" type="button" onclick="clearDrawing()">그리기 전체 지우기</button
+            ><button id="reset" type="button" onclick="resetOutfit()">전체 초기화</button>
+          </div>
+        </div>
+      </section>
+      <section class="right" aria-label="의상 선택">
+        <p class="hint options-hint">옵션이 더 있으면 선택 줄을 좌우로 밀어보세요.</p>
+        <div class="item-box">
+          <h2>헤어스타일</h2>
+          <div id="hair-options" class="items">
+            <label><input type="radio" name="hair" value="기본" onchange="changeOption(this.name, this.value)"> 기본</label>
+            <label><input type="radio" name="hair" value="단발" onchange="changeOption(this.name, this.value)"> 단발</label>
+            <label><input type="radio" name="hair" value="장발" onchange="changeOption(this.name, this.value)"> 장발</label>
+            <label><input type="radio" name="hair" value="곱슬" onchange="changeOption(this.name, this.value)"> 곱슬</label>
+            <label><input type="radio" name="hair" value="포니테일" onchange="changeOption(this.name, this.value)"> 포니테일</label>
+            <label><input type="radio" name="hair" value="가르마" onchange="changeOption(this.name, this.value)"> 가르마</label>
+            <label><input type="radio" name="hair" value="번 헤어" onchange="changeOption(this.name, this.value)"> 번 헤어</label>
+            <label><input type="radio" name="hair" value="투블럭" onchange="changeOption(this.name, this.value)"> 투블럭</label>
+          </div>
+        </div>
+        <div class="item-box">
+          <h2>액세서리 <small class="multiple-note">(여러 개 선택 가능)</small></h2>
+          <div id="acc-options" class="items">
+            <label><input type="checkbox" name="acc" value="없음" onchange="changeAccessory(this)"> 없음</label>
+            <label><input type="checkbox" name="acc" value="안경" onchange="changeAccessory(this)"> 안경</label>
+            <label><input type="checkbox" name="acc" value="모자" onchange="changeAccessory(this)"> 모자</label>
+            <label><input type="checkbox" name="acc" value="목걸이" onchange="changeAccessory(this)"> 목걸이</label>
+            <label><input type="checkbox" name="acc" value="선글라스" onchange="changeAccessory(this)"> 선글라스</label>
+            <label><input type="checkbox" name="acc" value="귀걸이" onchange="changeAccessory(this)"> 귀걸이</label>
+            <label><input type="checkbox" name="acc" value="크로스백" onchange="changeAccessory(this)"> 크로스백</label>
+            <label><input type="checkbox" name="acc" value="헤드폰" onchange="changeAccessory(this)"> 헤드폰</label>
+            <label><input type="checkbox" name="acc" value="손목시계" onchange="changeAccessory(this)"> 손목시계</label>
+          </div>
+        </div>
+        <div class="item-box">
+          <h2>상하의</h2>
+          <p class="group-title">상의</p>
+          <div id="top-options" class="items">
+            <label><input type="radio" name="top" value="티셔츠" onchange="changeOption(this.name, this.value)"> 티셔츠</label>
+            <label><input type="radio" name="top" value="후드티" onchange="changeOption(this.name, this.value)"> 후드티</label>
+            <label><input type="radio" name="top" value="셔츠" onchange="changeOption(this.name, this.value)"> 셔츠</label>
+            <label><input type="radio" name="top" value="재킷" onchange="changeOption(this.name, this.value)"> 재킷</label>
+            <label><input type="radio" name="top" value="니트" onchange="changeOption(this.name, this.value)"> 니트</label>
+            <label><input type="radio" name="top" value="베스트" onchange="changeOption(this.name, this.value)"> 베스트</label>
+            <label><input type="radio" name="top" value="롱코트" onchange="changeOption(this.name, this.value)"> 롱코트</label>
+          </div>
+          <p class="group-title">하의</p>
+          <div id="bottom-options" class="items">
+            <label><input type="radio" name="bottom" value="청바지" onchange="changeOption(this.name, this.value)"> 청바지</label>
+            <label><input type="radio" name="bottom" value="슬랙스" onchange="changeOption(this.name, this.value)"> 슬랙스</label>
+            <label><input type="radio" name="bottom" value="반바지" onchange="changeOption(this.name, this.value)"> 반바지</label>
+            <label><input type="radio" name="bottom" value="카고팬츠" onchange="changeOption(this.name, this.value)"> 카고팬츠</label>
+            <label><input type="radio" name="bottom" value="플리츠 스커트" onchange="changeOption(this.name, this.value)"> 플리츠 스커트</label>
+            <label><input type="radio" name="bottom" value="와이드 팬츠" onchange="changeOption(this.name, this.value)"> 와이드 팬츠</label>
+            <label><input type="radio" name="bottom" value="조거팬츠" onchange="changeOption(this.name, this.value)"> 조거팬츠</label>
+          </div>
+        </div>
+        <div class="item-box">
+          <h2>신발</h2>
+          <div id="shoes-options" class="items">
+            <label><input type="radio" name="shoes" value="운동화" onchange="changeOption(this.name, this.value)"> 운동화</label>
+            <label><input type="radio" name="shoes" value="하이탑" onchange="changeOption(this.name, this.value)"> 하이탑</label>
+            <label><input type="radio" name="shoes" value="로퍼" onchange="changeOption(this.name, this.value)"> 로퍼</label>
+            <label><input type="radio" name="shoes" value="부츠" onchange="changeOption(this.name, this.value)"> 부츠</label>
+            <label><input type="radio" name="shoes" value="샌들" onchange="changeOption(this.name, this.value)"> 샌들</label>
+            <label><input type="radio" name="shoes" value="메리제인" onchange="changeOption(this.name, this.value)"> 메리제인</label>
+          </div>
+        </div>
+        <div class="color-options">
+          <label>피부색 <input type="color" id="skin" oninput="changeOption('skin', this.value)" value="#f3d2b4" /></label
+          ><label
+            >상의 색 <input type="color" id="topColor" oninput="changeOption('topColor', this.value)" value="#5f806c" /></label
+          ><label
+            >하의 색 <input type="color" id="bottomColor" oninput="changeOption('bottomColor', this.value)" value="#435d83"
+          /></label>
+        </div>
+        <div class="code-panel">
+          <label for="code">공유받은 코디 코드</label
+          ><textarea
+            id="code"
+            rows="2"
+            placeholder="결과 화면에서 복사한 코디 코드"
+          ></textarea
+          ><button id="apply-code" type="button" onclick="applyCode()">코드 적용</button>
+        </div>
+      </section>
+    </main>
+    <p id="message" class="message" role="status" aria-live="polite"></p>
+    <section class="saved-panel">
+      <h2>내가 저장한 코디</h2>
+      <p class="hint">이 브라우저에 최대 10개까지 저장해요.</p>
+      <div class="button-row">
+        <label for="outfit-title">코디 이름</label
+        ><input
+          id="outfit-title"
+          maxlength="30"
+          placeholder="예: 체육대회 코디"
+        /><button id="save-outfit" type="button" onclick="saveOutfit()">현재 코디 저장</button>
+      </div>
+      <ul id="saved-list"></ul>
+    </section>
+  </body>
+</html>

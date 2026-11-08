@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>미림패션쇼 - 랭킹</title>
+    <link rel="stylesheet" href="../css/ranking.css" />
+    <link rel="stylesheet" href="../css/common.css" />
+    <script src="../js/common.js" defer></script>
+    <script src="../js/ranking.js" defer></script>
+  </head>
+  <body>
+    <main class="rank-page">
+      <h1>패션 랭킹 <span>TOP 5</span></h1>
+      <p class="description">이 브라우저의 연습 점수 순위</p>
+      <p class="ranking-note">
+        AI 평가와 전체 사용자 랭킹은 서버 연결 후 사용할 수 있어요.
+      </p>
+      <ol id="rank-list" class="rank-list"></ol>
+      <div class="button-row">
+        <button id="clear-records" type="button" onclick="clearRecords()">연습 기록 삭제</button
+        ><a class="home-button" href="home.html">홈으로 →</a>
+      </div>
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+    </main>
+  </body>
+</html>

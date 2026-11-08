@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>미림패션쇼 - 인물 선택</title>
+    <link rel="stylesheet" href="../css/select.css" />
+    <link rel="stylesheet" href="../css/common.css" />
+    <script src="../js/common.js" defer></script>
+    <script src="../js/character.js" defer></script>
+    <script src="../js/select.js" defer></script>
+  </head>
+  <body>
+    <main class="select-page">
+      <header class="page-top">
+        <a href="home.html">← 홈으로</a><span>미림패션쇼</span>
+      </header>
+      <div class="content">
+        <h1>인물 선택</h1>
+        <p class="description">꾸미고 싶은 캐릭터를 골라주세요.</p>
+      </div>
+      <section class="choice-area" aria-label="인물 선택">
+        <button type="button" class="person" onclick="selectPerson('남자 캐릭터')">
+          <canvas
+            class="avatar-canvas"
+            id="person-one"
+            width="420"
+            height="560"
+            aria-label="남자 캐릭터"
+          ></canvas
+          ><strong>남자 캐릭터</strong><small>기본 캐릭터</small>
+        </button>
+        <button type="button" class="person" onclick="selectPerson('여자 캐릭터')">
+          <canvas
+            class="avatar-canvas"
+            id="person-two"
+            width="420"
+            height="560"
+            aria-label="여자 캐릭터"
+          ></canvas
+          ><strong>여자 캐릭터</strong><small>기본 캐릭터</small>
+        </button>
+      </section>
+    </main>
+  </body>
+</html>

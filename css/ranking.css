@@ -1,0 +1,103 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f4f5f1;
+  font-family: "Malgun Gothic", Arial, sans-serif;
+  color: #303630;
+}
+.rank-page {
+  width: min(800px, 94%);
+  margin: 70px auto 35px;
+}
+.rank-page h1 {
+  font-weight: 700;
+  font-size: 31px;
+  text-align: center;
+  margin: 0;
+}
+h1 span {
+  color: #5c7765;
+}
+.description {
+  text-align: center;
+  color: #7a817b;
+  margin: 12px 0 35px;
+  font-size: 14px;
+}
+.rank-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rank-list li {
+  min-height: 68px;
+  background: #424b45;
+  color: #fff;
+  border-radius: 6px;
+  margin: 0 0 14px;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.rank-list strong {
+  font-size: 20px;
+  font-weight: 600;
+  width: 55px;
+}
+.rank-list span {
+  flex: 1;
+  font-size: 16px;
+}
+.rank-list em {
+  font-size: 15px;
+  font-style: normal;
+  color: #d5ddd5;
+}
+.rank-list li:first-child {
+  background: #526b5a;
+}
+.home-button {
+  display: block;
+  margin: 18px 0 0 auto;
+  width: 122px;
+  padding: 11px;
+  background: #526b5a;
+  color: white;
+  border-radius: 5px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+}
+.home-button:hover {
+  color: white;
+  background: #3e5645;
+}
+.note {
+  text-align: center;
+  color: #898f89;
+  font-size: 12px;
+  margin: 25px 0;
+}
+@media (max-width: 550px) {
+  .rank-page {
+    margin-top: 38px;
+  }
+  h1 {
+    font-size: 25px;
+  }
+  .rank-list li {
+    padding: 13px;
+    gap: 8px;
+  }
+  .rank-list strong {
+    font-size: 17px;
+    width: 40px;
+  }
+  .rank-list span,
+  .rank-list em {
+    font-size: 12px;
+  }
+}

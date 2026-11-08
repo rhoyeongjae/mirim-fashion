@@ -1,0 +1,281 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  color: #303630;
+  font-family: "Malgun Gothic", Arial, sans-serif;
+  background: #f4f5f1;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+.top {
+  min-height: 56px;
+  padding: 10px 26px;
+  background: #fff;
+  border-bottom: 1px solid #d9dfd9;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.top b {
+  font-size: 18px;
+}
+.top a {
+  font-size: 14px;
+}
+.top a:hover {
+  color: #4c7863;
+}
+.finish {
+  background: #455f50;
+  color: #fff;
+  border-radius: 5px;
+  padding: 8px 13px;
+}
+.top .finish:hover {
+  color: white;
+  background: #344e40;
+}
+.designer {
+  display: grid;
+  grid-template-columns: 48% 52%;
+  width: min(1180px, 96%);
+  min-height: 690px;
+  margin: 22px auto 0;
+  border: 1px solid #d8dfd7;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 12px #26362c0a;
+}
+.left {
+  position: relative;
+  min-height: 680px;
+  border-right: 2px solid #cdd5cd;
+  background: #fbfbf9;
+}
+.tools {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+  width: 205px;
+  padding: 12px;
+  border: 1px solid #e0e4dd;
+  background: #fff;
+  border-radius: 6px;
+}
+.tools p {
+  margin: 0 0 10px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.tool-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.tools button {
+  font-size: 12px;
+  background: #e9eee8;
+  border: 1px solid #d8e0d7;
+  color: #35443b;
+  padding: 7px 2px;
+  border-radius: 4px;
+}
+.skin {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border-top: 1px solid #e9e9e4;
+  font-size: 13px;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+.dot {
+  display: inline-block;
+  height: 17px;
+  width: 17px;
+  border-radius: 50%;
+  border: 1px solid #c2b2a5;
+}
+.one {
+  margin-left: auto;
+  background: #f3d2b4;
+}
+.two {
+  background: #d9a986;
+}
+.three {
+  background: #ae7c5c;
+}
+.character {
+
+}
+.a1 {
+  transform: rotate(49deg);
+}
+.a2 {
+  transform: rotate(-49deg);
+}
+.l1 {
+  transform: rotate(36deg);
+}
+.l2 {
+  transform: rotate(-36deg);
+}
+.reset {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  padding: 10px 19px;
+  background: #4a5f51;
+  color: white;
+  border: 0;
+  border-radius: 5px;
+  font-size: 14px;
+}
+.right {
+  min-width: 0;
+  padding: 17px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.item-box {
+  background: #424b45;
+  color: #fff;
+  min-height: 158px;
+  padding: 18px 20px;
+  border-radius: 6px;
+}
+.item-box h2 {
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0 0 19px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ffffff36;
+}
+.options-hint {
+  margin: 0;
+}
+/* 옵션이 넘치면 이 줄 안에서만 좌우로 스크롤함 */
+.items {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 6px 4px 10px;
+  font-size: 14px;
+  scrollbar-color: #b4c9b7 #303b33;
+  user-select: none;
+}
+.items label {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 4px;
+  align-items: center;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.items.is-dragging,
+.items.is-dragging label {
+  cursor: grabbing;
+}
+.multiple-note {
+  color: #d7e6d9;
+  font-size: 13px;
+  font-weight: normal;
+}
+.items input {
+  accent-color: #c5dfcd;
+}
+.group-title {
+  color: #d7e6d9;
+  margin: 10px 0 8px;
+  font-size: 13px;
+}
+.group-title:first-of-type {
+  margin-top: 0;
+}
+.share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-top: auto;
+}
+.share label {
+  white-space: nowrap;
+}
+.share input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #d7ddd6;
+  border-radius: 4px;
+  padding: 9px;
+}
+.share button {
+  border: 0;
+  border-radius: 4px;
+  background: #455f50;
+  color: #fff;
+  padding: 10px 14px;
+}
+.notice {
+  text-align: center;
+  color: #777;
+  font-size: 12px;
+  margin: 12px;
+}
+@media (max-width: 850px) {
+  .designer {
+    grid-template-columns: 1fr;
+  }
+  .left {
+    border-right: 0;
+    border-bottom: 2px solid #cdd5cd;
+    min-height: 630px;
+  }
+  .character {
+    left: calc(45% - 85px);
+  }
+  .right {
+    min-height: 530px;
+  }
+}
+@media (max-width: 520px) {
+  .top {
+    padding: 10px;
+  }
+  .top b {
+    font-size: 15px;
+  }
+  .top a {
+    font-size: 12px;
+  }
+  .tools {
+    right: 10px;
+    width: 175px;
+  }
+  .character {
+    left: calc(32% - 75px);
+    transform: scale(0.85);
+    transform-origin: top;
+  }
+  .right {
+    padding: 10px;
+  }
+  .item-box {
+    padding: 16px;
+  }
+  .share {
+    flex-wrap: wrap;
+  }
+  .share label {
+    width: 100%;
+  }
+}
