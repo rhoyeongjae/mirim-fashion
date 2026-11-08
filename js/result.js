@@ -1,6 +1,18 @@
 const outfit = getOutfit();
 const accessories = getAccessories(outfit);
 const canvas = document.getElementById("result-model");
+
+const getUserId = () => {
+  let userId = localStorage.getItem("mirim-user-id-v1");
+
+  if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem("mirim-user-id-v1", userId);
+  }
+
+  return userId;
+};
+
 let photo = null;
 let score = null;
 let photoReady = true;
@@ -39,29 +51,68 @@ const evaluateOutfit = () => {
       break;
     }
   }
-  displayEvaluation(score, "의상과 색, 그림 여부로 계산한 연습 점수예요. 실제 AI 평가는 서버 연결 후 사용할 수 있어요.");
+  displayEvaluation(
+    score,
+    "의상과 색, 그림 여부로 계산한 연습 점수예요. 실제 AI 평가는 서버 연결 후 사용할 수 있어요.",
+  );
   document.getElementById("save-record").disabled = false;
 };
 
 // 점수 목록에 기록을 추가하고 높은 점수 5개만 저장함
-const saveRecord = () => {
+const saveRecord = async () => {
   if (score === null) {
     return;
   }
+
   const name = document.getElementById("record-name").value.trim();
+
   if (name === "") {
     showMessage("기록할 이름을 입력해주세요.");
     return;
   }
+
+  // 기존 브라우저 저장 기능 유지
   const ranks = readData(RANK_KEY, []);
-  ranks.push({name: name, score: score});
+  ranks.push({ name: name, score: score });
   ranks.sort((a, b) => b.score - a.score);
-  if (saveData(RANK_KEY, ranks.slice(0, 5))) {
+
+  if (!saveData(RANK_KEY, ranks.slice(0, 5))) {
+    showMessage("브라우저 저장에 실패했어요.");
+    return;
+  }
+
+  // 추가된 서버 통신 코드
+  try {
+    const response = await fetch("http://localhost:5001/api/coordinations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: getUserId(),
+        nickname: name,
+        outfit: outfit,
+        score: score,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || "서버 저장 실패");
+    }
+
     document.getElementById("save-record").disabled = true;
-    showMessage("이 브라우저의 연습 랭킹에 저장했어요.");
+
+    showMessage("브라우저와 서버에 모두 저장했어요.");
+  } catch (error) {
+    console.error("서버 저장 오류:", error);
+
+    document.getElementById("save-record").disabled = true;
+
+    showMessage("브라우저에는 저장됐지만 서버 저장에는 실패했어요.");
   }
 };
-
 // 캔버스에 그려진 결과를 PNG 주소로 바꿔 다운로드함
 const downloadImage = () => {
   if (!photoReady) {
@@ -108,5 +159,11 @@ if (outfit.face !== "") {
   photo.src = outfit.face;
 }
 document.getElementById("result-name").textContent = outfit.name + "의 코디";
-document.getElementById("outfit-summary").textContent = [outfit.hair, accessories.join(", ") || "없음", outfit.top, outfit.bottom, outfit.shoes ?? "운동화"].join(" · ");
+document.getElementById("outfit-summary").textContent = [
+  outfit.hair,
+  accessories.join(", ") || "없음",
+  outfit.top,
+  outfit.bottom,
+  outfit.shoes ?? "운동화",
+].join(" · ");
 drawResult();

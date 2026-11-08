@@ -1,9 +1,11 @@
 const express = require("express");
+const crypto = require("crypto");
 const router = express.Router();
 const db = require("../db");
 
-// AI 피드백 생성 헬퍼 함수
-function generateAIFeedback(items) {
+// 임시 코디 평가 함수
+// 실제 AI 평가 기능은 나중에 연결할 예정
+function generateAIFeedback() {
   const score = Math.floor(Math.random() * 26) + 75;
 
   const feedbacks = [
@@ -14,91 +16,157 @@ function generateAIFeedback(items) {
     "시즌 분위기에 딱 맞는 센스 있는 코디네요. 역시는 역시 ! !",
   ];
 
-  const randomComment = feedbacks[Math.floor(Math.random() * feedbacks.length)];
+  const feedback = feedbacks[Math.floor(Math.random() * feedbacks.length)];
 
   return {
     score,
-    feedback: `[AI 점수: ${score}점] ${randomComment}`,
+    feedback: `[연습용 점수: ${score}점] ${feedback}`,
   };
 }
 
-// 옷 정보 저장 + AI 피드백 생성 + DB 저장
+// 코디 전체 정보 저장
 router.post("/", async (req, res) => {
-  const { user_id, items } = req.body;
+  const { user_id, nickname, outfit, score } = req.body;
+
+  if (
+    !user_id ||
+    typeof user_id !== "string" ||
+    !outfit ||
+    typeof outfit !== "object" ||
+    Array.isArray(outfit)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "user_id와 outfit 정보가 필요합니다.",
+    });
+  }
+
+  let connection;
 
   try {
-    // 1. AI 피드백 및 점수 자동으로 뽑아냄
-    const aiResult = generateAIFeedback(items);
+    connection = await db.getConnection();
+    await connection.beginTransaction();
 
-    // 2. 6자리 고유 공유 코드 생성
-    const coordination_code = Math.random()
-      .toString(36)
-      .substring(2, 8)
+    // 사용자가 DB에 없으면 생성
+    await connection.query(
+      `INSERT INTO users (user_id, nickname)
+   VALUES (?, ?)
+   ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)`,
+      [user_id, nickname || "패션피플"],
+    );
+
+    // 얼굴 이미지 데이터는 서버에 저장하지 않음
+    const safeOutfit = { ...outfit };
+    delete safeOutfit.face;
+
+    // 점수가 전달되지 않으면 임시 점수 생성
+    const aiResult =
+      Number.isFinite(Number(score)) && score !== undefined
+        ? {
+            score: Number(score),
+            feedback: "코디 점수가 저장되었습니다.",
+          }
+        : generateAIFeedback();
+
+    if (aiResult.score < 0 || aiResult.score > 100) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "점수는 0~100 사이여야 합니다.",
+      });
+    }
+
+    // 공유 코드 생성
+    const coordination_code = crypto
+      .randomBytes(4)
+      .toString("hex")
+      .substring(0, 6)
       .toUpperCase();
 
-    const sqlCoord = `
-      INSERT INTO coordinations (user_id, coordination_code, ai_score, ai_feedback)
-      VALUES (?, ?, ?, ?)
+    // 코디 전체 정보를 JSON으로 저장
+    const sql = `
+      INSERT INTO coordinations
+      (user_id, coordination_code, ai_score, ai_feedback, outfit_data)
+      VALUES (?, ?, ?, ?, ?)
     `;
-    const [result] = await db.query(sqlCoord, [
-      user_id || "guest",
+
+    const [result] = await connection.query(sql, [
+      user_id,
       coordination_code,
       aiResult.score,
       aiResult.feedback,
+      JSON.stringify(safeOutfit),
     ]);
 
-    const coordination_id = result.insertId;
-
-    // 4. 두 개의 서로 다른 테이블 정보를 서로 짝지어 연결해 주는 연결고리 테이블
-    if (items && Array.isArray(items) && items.length > 0) {
-      const sqlItem = `
-        INSERT INTO coordination_items (coordination_id, item_id)
-        VALUES ?
-      `;
-      const values = items.map((itemId) => [coordination_id, itemId]);
-      await db.query(sqlItem, [values]);
-    }
+    await connection.commit();
 
     res.status(201).json({
       success: true,
-      message: "코디 및 AI 피드백 저장 완료",
+      message: "코디 저장 완료!",
       data: {
-        coordination_id,
+        coordination_id: result.insertId,
         coordination_code,
         ai_score: aiResult.score,
         ai_feedback: aiResult.feedback,
+        outfit_data: safeOutfit,
       },
     });
   } catch (error) {
-    console.error("코디 및 AI 피드백 저장 오류:", error);
-    res.status(500).json({ success: false, message: "저장 실패" });
+    if (connection) {
+      await connection.rollback();
+    }
+
+    console.error("코디 저장 오류:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "코디 저장 실패",
+    });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 });
 
-// 공유 코드로 결과 및 입은 옷 목록 조회
+// 공유 코드로 코디 조회
 router.get("/:code", async (req, res) => {
   const { code } = req.params;
 
   try {
     const sql = `
-      SELECT c.*, GROUP_CONCAT(ci.item_id) as item_ids
-      FROM coordinations c
-      LEFT JOIN coordination_items ci ON c.coordination_id = ci.coordination_id
-      WHERE c.coordination_code = ?
-      GROUP BY c.coordination_id
+      SELECT
+        coordination_id,
+        user_id,
+        coordination_code,
+        ai_score,
+        ai_feedback,
+        outfit_data,
+        created_at
+      FROM coordinations
+      WHERE coordination_code = ?
     `;
+
     const [rows] = await db.query(sql, [code]);
 
     if (rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "해당 코드를 찾을 수 없습니다." });
+      return res.status(404).json({
+        success: false,
+        message: "해당 코드를 찾을 수 없습니다.",
+      });
     }
 
-    res.status(200).json({ success: true, data: rows[0] });
+    res.status(200).json({
+      success: true,
+      data: rows[0],
+    });
   } catch (error) {
-    console.error("조회 오류:", error);
-    res.status(500).json({ success: false, message: "조회 실패" });
+    console.error("코디 조회 오류:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "코디 조회 실패",
+    });
   }
 });
 
