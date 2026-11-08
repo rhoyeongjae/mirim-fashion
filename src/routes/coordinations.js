@@ -49,7 +49,7 @@ async function evaluateWithNVIDIA(image, outfit) {
         },
       ],
       temperature: 0.3,
-      max_tokens: 500,
+      max_tokens: 1500,
       stream: false,
     },
     {
@@ -66,6 +66,8 @@ async function evaluateWithNVIDIA(image, outfit) {
   console.log("NVIDIA 전체 응답:", JSON.stringify(response.data, null, 2));
 
   const content = message?.content;
+  console.log("NVIDIA 응답 내용:", content);
+  console.log("NVIDIA 응답 형식:", typeof content);
 
   if (typeof content !== "string" || !content.trim()) {
     throw new Error("NVIDIA가 텍스트 응답을 반환하지 않았습니다.");

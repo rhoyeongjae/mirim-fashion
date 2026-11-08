@@ -50,7 +50,7 @@ const getEvaluationInput = () => {
 
 // 서버에 코디를 보내고 NVIDIA AI 평가 받기
 const evaluateOutfit = async () => {
-  const button = document.getElementById("practice-evaluate");
+  const button = document.getElementById("evaluate-outfit");
   const recordButton = document.getElementById("save-record");
 
   if (button.disabled) return;
