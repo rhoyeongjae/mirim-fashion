@@ -61,7 +61,16 @@ async function evaluateWithNVIDIA(image, outfit) {
     },
   );
 
-  const content = response.data.choices[0].message.content;
+  const message = response.data.choices?.[0]?.message;
+
+  console.log("NVIDIA 전체 응답:", JSON.stringify(response.data, null, 2));
+
+  const content = message?.content;
+
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error("NVIDIA가 텍스트 응답을 반환하지 않았습니다.");
+  }
+
   const jsonText = content.match(/\{[\s\S]*\}/)?.[0];
 
   if (!jsonText) {
@@ -142,7 +151,7 @@ router.post("/evaluate", async (req, res) => {
 
 // 코디 전체 정보 저장
 router.post("/", async (req, res) => {
-  const { user_id, nickname, outfit, image } = req.body;
+  const { user_id, nickname, outfit, score, feedback } = req.body;
 
   if (
     !user_id ||
@@ -150,50 +159,45 @@ router.post("/", async (req, res) => {
     !outfit ||
     typeof outfit !== "object" ||
     Array.isArray(outfit) ||
-    typeof image !== "string" ||
-    !image.startsWith("data:image/")
+    !Number.isInteger(Number(score)) ||
+    Number(score) < 0 ||
+    Number(score) > 100 ||
+    typeof feedback !== "string" ||
+    !feedback.trim()
   ) {
     return res.status(400).json({
       success: false,
-      message: "user_id와 outfit 정보가 필요합니다.",
+      message: "사용자, 코디, AI 평가 정보가 필요합니다.",
     });
   }
 
   let connection;
 
   try {
-    // 얼굴 사진을 제외한 코디 이미지와 정보를 AI에 전달
     const safeOutfit = { ...outfit };
     delete safeOutfit.face;
 
-    const aiResult = await evaluateWithNVIDIA(image, safeOutfit);
+    const aiResult = {
+      score: Number(score),
+      feedback: feedback,
+    };
 
     connection = await db.getConnection();
+    await connection.beginTransaction();
 
-    // 사용자가 DB에 없으면 생성
     await connection.query(
       `INSERT INTO users (user_id, nickname)
-   VALUES (?, ?)
-   ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)`,
+       VALUES (?, ?)
+       ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)`,
       [user_id, nickname || "패션피플"],
     );
 
-    if (aiResult.score < 0 || aiResult.score > 100) {
-      await connection.rollback();
-      return res.status(400).json({
-        success: false,
-        message: "점수는 0~100 사이여야 합니다.",
-      });
-    }
-
-    // 공유 코드 생성
     const coordination_code = crypto
       .randomBytes(4)
       .toString("hex")
       .substring(0, 6)
       .toUpperCase();
 
-    // 코디 전체 정보를 JSON으로 저장
     const sql = `
       INSERT INTO coordinations
       (user_id, coordination_code, ai_score, ai_feedback, outfit_data)
