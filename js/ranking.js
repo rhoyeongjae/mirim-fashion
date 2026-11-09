@@ -1,8 +1,5 @@
-// 저장된 점수를 높은 순서대로 정렬하고 빈 순위에는 안내 문구를 넣음
-const showRanking = () => {
-  const list = document.getElementById("rank-list");
-  const ranks = readData(RANK_KEY, []);
-  ranks.sort((a, b) => b.score - a.score);
+// 서버 순위와 브라우저 순위를 각각 같은 방식으로 그려 줌
+const renderRanking = (list, ranks) => {
   list.innerHTML = "";
   for (let i = 0; i < 5; i++) {
     const row = document.createElement("li");
@@ -18,15 +15,47 @@ const showRanking = () => {
   }
 };
 
-// 확인을 누르면 점수 목록을 비우고 순위 화면을 다시 그림
+// 서버에서 내려준 TOP 5를 별도로 표시함
+const showServerRanking = async () => {
+  const status = document.getElementById("ranking-status");
+  const list = document.getElementById("rank-list");
+  status.textContent = "서버 순위를 불러오는 중이에요.";
+
+  try {
+    const response = await fetch("http://localhost:5001/api/rankings", {
+      signal: AbortSignal.timeout(8000),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success || !Array.isArray(result.data)) {
+      throw new Error("랭킹 조회 실패");
+    }
+    const ranks = result.data.map(row => ({
+      name: row.nickname || "패션피플",
+      score: Number(row.ai_score),
+    }));
+    renderRanking(list, ranks);
+    status.textContent = ranks.length ? "" : "서버에 등록된 점수가 아직 없어요.";
+  } catch {
+    status.textContent = "서버 순위를 불러오지 못했어요. 백엔드와 DB가 켜져 있는지 확인해주세요.";
+  }
+};
+
+const showLocalRanking = () => {
+  const ranks = readData(RANK_KEY, []);
+  ranks.sort((a, b) => b.score - a.score);
+  renderRanking(document.getElementById("local-rank-list"), ranks);
+};
+
+// 확인을 누르면 이 브라우저에 저장된 기록만 비움
 const clearRecords = () => {
   if (
     confirm("이 브라우저의 연습 기록을 지울까요?") &&
     saveData(RANK_KEY, [])
   ) {
-    showRanking();
+    showLocalRanking();
     showMessage("연습 기록을 지웠어요.");
   }
 };
 
-showRanking();
+showLocalRanking();
+showServerRanking();

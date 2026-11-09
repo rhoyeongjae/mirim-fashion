@@ -12,11 +12,11 @@
   <body>
     <main class="rank-page">
       <h1>패션 랭킹 <span>TOP 5</span></h1>
-      <p class="description">이 브라우저의 연습 점수 순위</p>
-      <p class="ranking-note">
-        AI 평가와 전체 사용자 랭킹은 서버 연결 후 사용할 수 있어요.
-      </p>
-      <ol id="rank-list" class="rank-list"></ol>
+      <p class="description">서버에 저장된 AI 평가 점수 순위</p>
+      <p id="ranking-status" class="ranking-note" role="status"></p>
+      <ol id="rank-list" class="rank-list" aria-label="서버 순위"></ol>
+      <h2>이 브라우저의 연습 기록</h2>
+      <ol id="local-rank-list" class="rank-list" aria-label="브라우저 연습 순위"></ol>
       <div class="button-row">
         <button id="clear-records" type="button" onclick="clearRecords()">연습 기록 삭제</button
         ><a class="home-button" href="home.html">홈으로 →</a>
